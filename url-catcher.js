@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kongregate URL Catcher
 // @namespace    http://tampermonkey.net/
-// @version      0.3.2
+// @version      0.3.3
 // @description  Simple tool that continuously checks your Kongregate chat and lists links posted there
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -154,7 +154,8 @@ class LinkList {
 
             const matches = message.matchAll(re_weburl);
             for (const match of matches) {
-                let url = match[0].replace('%C2%A0', '');
+                // remove non-breaking space
+                let url = match[0].replace('&nbsp;', '');
                 let link = new Link(time, user, url, room, whisper);
                 this.addLink(link);
             }
