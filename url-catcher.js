@@ -1,23 +1,23 @@
 // ==UserScript==
 // @name         Kongregate URL Catcher
 // @namespace    http://tampermonkey.net/
-// @version      0.3.4
-// @description  Simple tool that continuously checks your Kongregate chat and lists links posted there
+// @version      0.4.1
+// @description  Simple tool that continuously checks your Kongregate chat and lists links posted there.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js
 // @require      https://code.jquery.com/ui/1.12.1/jquery-ui.min.js
-// @grant        GM.setValue
-// @grant        GM.getValue
-// @grant        GM.listValues
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @nocompat     opera
 // @updateURL    https://raw.githubusercontent.com/ciruvan/kongregate-url-catcher/master/url-catcher.js
 // @downloadURL  https://raw.githubusercontent.com/ciruvan/kongregate-url-catcher/master/url-catcher.js
 // ==/UserScript==
 
-// This is a very early version. There's lots of code here that has been disabled because it doesn't really work yet.
+// Idea and additional testing by EisernerBrotkrum.
 
 let divId = "url-catcher";
+let settings = {};
 
 class Settings {
     constructor(parentElem) {
@@ -25,9 +25,8 @@ class Settings {
         this.position = {};
         this.size = {};
         this.initEvents();
-        this.load().then(function() {
-            this.parentElem.html(this.getHTML());
-        }.bind(this));
+        this.load();
+        this.parentElem.html(this.getHTML());
     }
 
     initEvents() {
@@ -39,30 +38,34 @@ class Settings {
     getHTML() {
         let html =
             '<table class="url-catcher-settings">'
-            + '<tr><td style="width: 100%;"><label for="setting-clickable">Links clickable in chat</label></td>'
-            + '<td style="width: 100px; text-align: center;"><input type="checkbox" name="setting-clickable" id="setting-clickable" ' + (this.clickable ? 'checked' : '') + '></td></tr>'
 
-            + '<tr><td><label for="setting-friends">Ignore links not posted by friends</label></td>'
-            + '<td style="text-align: center;"><input type="checkbox" name="setting-friends" id="setting-friends" ' + (this.friends ? 'checked' : '') + '></td></tr>'
+            + '<tr><td style="width: 100%;" class="trunc"><label for="setting-youtube">Try to fetch Youtube video titles</label></td>'
+            + '<td style="width: 80px; text-align: center;"><input type="checkbox" name="setting-youtube" id="setting-youtube" ' + (this.youtube ? 'checked' : '') + '></td></tr>'
 
-            + '<tr><td><label for="setting-position">Window position on load</label></td>'
-            + '<td style="text-align: center;"><select name="setting-position" id="setting-position">'
-            + '<option value="restore">Restore last</option>'
-            + '<option value="left">Left of game</option>'
-            + '<option value="right">Right of game</option>'
-            + '</select</td></tr>'
+            + '<tr><td colspan="2" style="width: 100%; text-align: center;">'
+            + '<input type="text" name="setting-youtube-apikey" id="setting-youtube-apikey" placeholder="Your YT API key" spellcheck="false" size="40" value="' + (this.youtubeApikey ? this.youtubeApikey : '') + '"></input></td></tr>'
 
-            + '<tr><td><label for="setting-size">Restore window size on load</label></td>'
-            + '<td style="text-align: center;"><input type="checkbox" name="setting-size" id="setting-size" ' + (this.size.restore ? 'checked' : '') + '></td></tr>'
+            //+ '<tr><td><label for="setting-clickable">Links clickable in chat</label></td>'
+            //+ '<td><input type="checkbox" name="setting-clickable" id="setting-clickable" ' + (this.clickable ? 'checked' : '') + '></td></tr>'
 
-            + '<tr><td><label for="setting-youtube">Fetch Youtube video titles</label></td>'
-            + '<td style="text-align: center;"><input type="checkbox" name="setting-youtube" id="setting-youtube" ' + (this.youtube ? 'checked' : '') + '></td></tr>'
+            //+ '<tr><td><label for="setting-friends">Ignore links not posted by friends</label></td>'
+            //+ '<td style="text-align: center;"><input type="checkbox" name="setting-friends" id="setting-friends" ' + (this.friends ? 'checked' : '') + '></td></tr>'
 
-            + '<tr><td><label for="setting-links">Open links in..</label></td>'
-            + '<td style="text-align: center;"><select name="setting-links" id="setting-links">'
-            + '<option value="tab">New tab</option>'
-            + '<option value="window">New window</option>'
-            + '</select</td></tr>'
+            //+ '<tr><td><label for="setting-position">Window position on load</label></td>'
+            //+ '<td style="text-align: center;"><select name="setting-position" id="setting-position">'
+            //+ '<option value="restore">Restore last</option>'
+            //+ '<option value="left">Left of game</option>'
+            //+ '<option value="right">Right of game</option>'
+            //+ '</select</td></tr>'
+
+            //+ '<tr><td><label for="setting-size">Restore window size on load</label></td>'
+            //+ '<td style="text-align: center;"><input type="checkbox" name="setting-size" id="setting-size" ' + (this.size.restore ? 'checked' : '') + '></td></tr>'
+
+            //+ '<tr><td><label for="setting-links">Open links in..</label></td>'
+            //+ '<td style="text-align: center;"><select name="setting-links" id="setting-links">'
+            //+ '<option value="tab">New tab</option>'
+            //+ '<option value="window">New window</option>'
+            //+ '</select</td></tr>'
 
             + '</table>'
             + '<table style="width: 100%;"><tr><td style="text-align: right;"><button class="button" id="btn-save-settings">Save</button></td></tr></table>'
@@ -71,35 +74,31 @@ class Settings {
         return html;
     }
 
-    async save() {
-        await GM.setValue('clickable', $('#setting-clickable').checked);
-        await GM.setValue('friends', $('#setting-friends').checked);
-        await GM.setValue('position', this.position.opt);
-        await GM.setValue('positionX', this.position.x);
-        await GM.setValue('positionY', this.position.y);
-        await GM.setValue('sizeRestore', $('#setting-size').checked);
-        await GM.setValue('sizeX', this.size.x);
-        await GM.setValue('sizeY', this.size.y);
-        await GM.setValue('youtube', $('#setting-youtube').checked);
-        console.log(await GM.listValues());
-        console.log(await GM.getValue('clickable'));
+    save() {
+        GM_setValue('clickable', $('#setting-clickable').is(":checked"));
+        GM_setValue('friends', $('#setting-friends').is(":checked"));
+        GM_setValue('position', this.position.opt);
+        GM_setValue('positionX', this.position.x);
+        GM_setValue('positionY', this.position.y);
+        GM_setValue('sizeRestore', $('#setting-size').is(":checked"));
+        GM_setValue('sizeX', this.size.x);
+        GM_setValue('sizeY', this.size.y);
+        GM_setValue('youtube', $('#setting-youtube').is(":checked"));
+        GM_setValue('youtubeApiKey', $('#setting-youtube-apikey').val());
+        this.load();
     }
 
     load() {
-        const myPromise = new Promise(async function(resolve, reject) {
-            this.clickable = await GM.getValue('clickable', true);
-            this.friends = await GM.getValue('friends', true);
-            this.position.opt = await GM.getValue('position', 'right');
-            this.position.x = await GM.getValue('positionX', 0);
-            this.position.y = await GM.getValue('positionY', 0);
-            this.size.restore = await GM.getValue('sizeRestore', false);
-            this.size.x = await GM.getValue('sizeX', 0);
-            this.size.y = await GM.getValue('sizeY', 0);
-            this.youtube = await GM.getValue('youtube', false);
-            resolve('loaded');
-        }.bind(this));
-
-        return myPromise;
+        this.clickable = GM_getValue('clickable', true);
+        this.friends = GM_getValue('friends', true);
+        this.position.opt = GM_getValue('position', 'right');
+        this.position.x = GM_getValue('positionX', 0);
+        this.position.y = GM_getValue('positionY', 0);
+        this.size.restore = GM_getValue('sizeRestore', false);
+        this.size.x = GM_getValue('sizeX', 0);
+        this.size.y = GM_getValue('sizeY', 0);
+        this.youtube = GM_getValue('youtube', false);
+        this.youtubeApiKey = GM_getValue('youtubeApiKey', false);
     }
 }
 
@@ -110,6 +109,7 @@ class Link {
         this.link = link;
         this.room = room;
         this.isPrivate = isPrivate;
+        this.youtubeTitle = false;
     }
 
     getHash() {
@@ -117,12 +117,42 @@ class Link {
         return calculateHash(myString);
     }
 
-    getHTML() {
+    getHTML(isEven) {
         let html =
-            '<tr><td>' + this.time + '</td><td class="trunc">' + this.user + '</td><td class="trunc">' + this.room + '</td></tr>'
-            + '<tr><td></td><td colspan="2" class="trunc"><a href="' + this.link + '" target="_blank">' + this.link + '</a></td></tr>';
+            '<tr class="' + (isEven ? 'is-even' : 'is-odd') + '"><td>' + this.time + '</td><td class="trunc">' + this.user + '</td><td class="trunc">' + this.room + '</td></tr>'
+            + '<tr class="' + (isEven ? 'is-even' : 'is-odd') + '"><td></td><td colspan="2" class="trunc"><a href="' + this.link + '" target="_blank">' + this.link + '</a></td></tr>';
+
+        if (this.youtubeID() && settings.youtube && settings.youtubeApiKey) {
+            let text = (this.youtubeTitle ? '[yt] ' + this.youtubeTitle : 'Fetching title..');
+
+            html += '<tr class="' + (isEven ? 'is-even' : 'is-odd') + '"><td></td><td colspan="2" class="trunc youtube-title" id="link-' + this.getHash() + '">' + text + '</td></tr>';
+            this.fetchYoutubeTitle();
+        }
 
         return html;
+    }
+
+    youtubeID() {
+        let regEx = /^http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?[\w\?=]*)?$/g;
+        let arr = regEx.exec(this.link);
+
+        if (arr) {
+            return arr[1];
+        }
+        return false;
+    }
+
+    fetchYoutubeTitle() {
+        if (!this.youtubeTitle) {
+            getYoutubeTitle(this.youtubeID(), settings.youtubeApiKey, function(error, title) {
+                if (error) {
+                    $('#link-' + this.getHash()).html('[yt] API error :(');
+                } else {
+                    this.youtubeTitle = title;
+                    $('#link-' + this.getHash()).html('[yt] ' + title);
+                }
+            }.bind(this));
+        }
     }
 }
 
@@ -133,8 +163,6 @@ class LinkList {
     }
 
     updateList() {
-        this.clear();
-
         $('.chat_message_window .chat-message').each(function(index, elem) {
             let room = $('#chat_window_header .room_name').html();
             let whisper = false;
@@ -157,7 +185,10 @@ class LinkList {
                 // remove non-breaking space
                 let url = match[0].replace('&nbsp;', '');
                 let link = new Link(time, user, url, room, whisper);
-                this.addLink(link);
+
+                if (!this.contains(link.getHash())) {
+                    this.addLink(link);
+                }
             }
         }.bind(this));
 
@@ -173,11 +204,11 @@ class LinkList {
     }
 
     contains(hash) {
-        this.links.forEach(function(item) {
-            if (item.hash == hash) {
+        for (let i = 0; i < this.links.length; i++) {
+            if (this.links[i].getHash() == hash) {
                 return true;
             }
-        });
+        }
 
         return false;
     }
@@ -192,8 +223,8 @@ class LinkList {
 
     getHTML() {
         let inner = [];
-        this.links.forEach(function(item) {
-            inner.push(item.getHTML());
+        this.links.forEach(function(item, index) {
+            inner.push(item.getHTML(index % 2 == 1));
         });
 
         let html =
@@ -211,7 +242,7 @@ class URLCatcherApp {
                 initStyles();
                 this.initApp();
                 this.linkList = new LinkList($('#tab-urls'));
-                //this.settings = new Settings($('#tab-settings'));
+                settings = new Settings($('#tab-settings'));
             }
         }.bind(this), 500);
     }
@@ -241,11 +272,11 @@ class URLCatcherApp {
             + '<div id="tabs">'
             + '  <ul>'
             + '    <li><a href="#tab-urls">URLs</a></li>'
-            //            + '    <li><a href="#tab-settings">Settings</a></li>' (settings don't work yet)
+            + '    <li><a href="#tab-settings">Settings</a></li>'
             + '  </ul>'
             + '  <div id="tab-urls" class="url-catcher-tab">'
             + '  </div>'
-            //            + '  <div id="tab-settings" class="url-catcher-tab">'
+            + '  <div id="tab-settings" class="url-catcher-tab">'
             + '  </div>'
             + '</div>'
             + '</div>';
@@ -289,9 +320,10 @@ function initStyles() {
     styles.push('#url-catcher .link-table td:nth-child(1) {width: 40px;}');
     styles.push('#url-catcher .link-table td:nth-child(2) {width: 90px;}');
     styles.push('#url-catcher .link-table td {padding: 0 3px 3px 3px;}');
+    styles.push('#url-catcher .link-table .youtube-title {font-style: italic;}');
     styles.push('#url-catcher .trunc {white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;}');
-    styles.push('#url-catcher .link-table tr:nth-child(4n+1), #url-catcher .link-table tr:nth-child(4n+2) {background: #fff;}');
-    styles.push('#url-catcher .link-table tr:nth-child(4n+3), #url-catcher .link-table tr:nth-child(4n+4) {background: #eee;}');
+    styles.push('#url-catcher .link-table tr.is-odd {background: #fff;}');
+    styles.push('#url-catcher .link-table tr.is-even {background: #eee;}');
     styles.push('#url-catcher .url-catcher-tab {overflow-y: auto; position: absolute; top: 30px; bottom: 0px;}');
     styles.push('#url-catcher .url-catcher-settings {width: 100%; table-layout: fixed; border-collapse: collapse; border-bottom: 1px solid #aaa; margin-bottom: 6px; padding: 0 3px 3px 3px;}');
     styles.push('#url-catcher .url-catcher-settings tr:nth-child(2n+1) {background: #fff;}');
@@ -300,6 +332,7 @@ function initStyles() {
     styles.push('#url-catcher .url-catcher-settings select {margin: 3px 0 3px 0;}');
     styles.push('#url-catcher .url-catcher-settings option {font-size: 0.55rem;}');
     styles.push('#url-catcher .url-catcher-settings td {padding-left: 3px;}');
+    styles.push('#url-catcher .url-catcher-settings #setting-youtube-apikey {font-size: 0.55rem; height: 7px; margin: 3px 0 2px 0; text-align: center;}');
     styles.push('#url-catcher .button {padding: 4px; min-width: 80px; font-weight: bold;}');
 
     addGlobalStyles(styles.join("\n"));
@@ -386,6 +419,28 @@ let re_weburl = new RegExp(
     // resource path (optional)
     "(?:[/?#]\\S*)?", "g"
 );
+
+function getYoutubeTitle(id, key, cb) {
+    let url = 'https://www.googleapis.com/youtube/v3/videos?key=' + encodeURIComponent(key) + '&part=snippet&id=' + encodeURIComponent(id);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open('get', url);
+
+    xhr.onload = function () {
+        try { var json = JSON.parse(xhr.responseText); } catch (err) { return cb(err); }
+        if (json.error) return cb(json.error);
+        if (json.items.length === 0) return cb(new Error('Not found'));
+        cb(null, json.items[0].snippet.title);
+    }
+    xhr.onerror = function () {
+        cb(new Error('Error contacting the YouTube API'));
+    }
+    xhr.onabort = function () {
+        cb(new Error('Aborted'));
+    }
+
+    xhr.send();
+}
 
 // MAIN ENTRY POINT
 
