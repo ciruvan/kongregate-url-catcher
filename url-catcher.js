@@ -11,8 +11,8 @@
 // @grant        GM.getValue
 // @grant        GM.listValues
 // @nocompat     opera
-// @updateURL
-// @downloadURL
+// @updateURL    https://raw.githubusercontent.com/ciruvan/kongregate-url-catcher/master/url-catcher.js
+// @downloadURL  https://raw.githubusercontent.com/ciruvan/kongregate-url-catcher/master/url-catcher.js
 // ==/UserScript==
 
 // This is a very early version. There's lots of code here that has been disabled because it doesn't really work yet.
