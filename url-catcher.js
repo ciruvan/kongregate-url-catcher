@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kongregate URL Catcher
 // @namespace    http://tampermonkey.net/
-// @version      0.3.3
+// @version      0.3.4
 // @description  Simple tool that continuously checks your Kongregate chat and lists links posted there
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -119,7 +119,7 @@ class Link {
 
     getHTML() {
         let html =
-            '<tr><td>' + this.time + '</td><td>' + this.user + '</td><td class="trunc">' + this.room + '</td></tr>'
+            '<tr><td>' + this.time + '</td><td class="trunc">' + this.user + '</td><td class="trunc">' + this.room + '</td></tr>'
             + '<tr><td></td><td colspan="2" class="trunc"><a href="' + this.link + '" target="_blank">' + this.link + '</a></td></tr>';
 
         return html;
@@ -162,6 +162,14 @@ class LinkList {
         }.bind(this));
 
         this.parentElem.html(this.getHTML());
+
+        // scroll URL tab down if necessary.
+        let tableheight = parseInt(this.parentElem.find('.link-table').height());
+        let divheight = parseInt(this.parentElem.height());
+
+        if (tableheight > divheight) {
+            $(this.parentElem).animate({scrollTop: tableheight});
+        }
     }
 
     contains(hash) {
@@ -270,16 +278,16 @@ function initStyles() {
     let styles = [];
     let roundedCorners = '-moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px; -khtml-border-radius: 4px;'
 
-    styles.push('#url-catcher {min-width: 150px; min-height: 200px; width: 300px; height: ' + height
+    styles.push('#url-catcher {min-width: 155px; min-height: 200px; width: 300px; height: ' + height
         + 'px; padding: 0.5em; position: absolute; top: ' + top + 'px; left: ' + left + 'px; border: 1px solid; '
-        + 'background-color: #ddd;' + roundedCorners + '; font-size: 0.55rem !important;}'
+        + 'background-color: #ddd;' + roundedCorners + '; font-size: 0.55rem !important; z-index: 99999;}'
     );
     styles.push('#url-catcher .url-catcher-header {cursor: grab; padding: 3px; font-size: 0.6rem !important; ' + roundedCorners + '}');
     styles.push('#url-catcher #tabs {position: absolute; top: 31px; left: 3px; right: 3px; bottom: 3px;}');
     styles.push('#url-catcher .ui-tabs-panel {padding: 0.3em 0.3em;}');
     styles.push('#url-catcher .link-table {width: 100%; table-layout: fixed; border-collapse: collapse;}');
     styles.push('#url-catcher .link-table td:nth-child(1) {width: 40px;}');
-    styles.push('#url-catcher .link-table td:nth-child(2) {width: 110px;}');
+    styles.push('#url-catcher .link-table td:nth-child(2) {width: 90px;}');
     styles.push('#url-catcher .link-table td {padding: 0 3px 3px 3px;}');
     styles.push('#url-catcher .trunc {white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;}');
     styles.push('#url-catcher .link-table tr:nth-child(4n+1), #url-catcher .link-table tr:nth-child(4n+2) {background: #fff;}');
