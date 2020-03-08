@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kongregate URL Catcher
 // @namespace    http://tampermonkey.net/
-// @version      0.4.1
+// @version      0.5.0
 // @description  Simple tool that continuously checks your Kongregate chat and lists links posted there.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -43,10 +43,10 @@ class Settings {
             + '<td style="width: 80px; text-align: center;"><input type="checkbox" name="setting-youtube" id="setting-youtube" ' + (this.youtube ? 'checked' : '') + '></td></tr>'
 
             + '<tr><td colspan="2" style="width: 100%; text-align: center;">'
-            + '<input type="text" name="setting-youtube-apikey" id="setting-youtube-apikey" placeholder="Your YT API key" spellcheck="false" size="40" value="' + (this.youtubeApikey ? this.youtubeApikey : '') + '"></input></td></tr>'
+            + '<input type="text" name="setting-youtube-apikey" id="setting-youtube-apikey" placeholder="Your YT API key" spellcheck="false" size="40" value="' + (this.youtubeApiKey ? this.youtubeApiKey : '') + '"></input></td></tr>'
 
-            //+ '<tr><td><label for="setting-clickable">Links clickable in chat</label></td>'
-            //+ '<td><input type="checkbox" name="setting-clickable" id="setting-clickable" ' + (this.clickable ? 'checked' : '') + '></td></tr>'
+            + '<tr><td><label for="setting-clickable">Links clickable in chat</label></td>'
+            + '<td style="width: 80px; text-align: center;"><input type="checkbox" name="setting-clickable" id="setting-clickable" ' + (this.clickable ? 'checked' : '') + '></td></tr>'
 
             //+ '<tr><td><label for="setting-friends">Ignore links not posted by friends</label></td>'
             //+ '<td style="text-align: center;"><input type="checkbox" name="setting-friends" id="setting-friends" ' + (this.friends ? 'checked' : '') + '></td></tr>'
@@ -186,6 +186,10 @@ class LinkList {
                 let url = match[0].replace('&nbsp;', '');
                 let link = new Link(time, user, url, room, whisper);
 
+                if (settings.clickable) {
+                    $(elem).find('.message').html(message.replace(url, '<a href="' + url + '" target="_blank">' + url + '</a>'));
+                }
+
                 if (!this.contains(link.getHash())) {
                     this.addLink(link);
                 }
@@ -205,7 +209,7 @@ class LinkList {
 
     contains(hash) {
         for (let i = 0; i < this.links.length; i++) {
-            if (this.links[i].getHash() == hash) {
+            if (this.links[i].getHash() === hash) {
                 return true;
             }
         }
@@ -224,13 +228,10 @@ class LinkList {
     getHTML() {
         let inner = [];
         this.links.forEach(function(item, index) {
-            inner.push(item.getHTML(index % 2 == 1));
+            inner.push(item.getHTML(index % 2 === 1));
         });
 
-        let html =
-            '<table class="link-table">' + inner.join('') + '</table>';
-
-        return html;
+        return '<table class="link-table">' + inner.join('') + '</table>';
     }
 }
 
@@ -431,13 +432,13 @@ function getYoutubeTitle(id, key, cb) {
         if (json.error) return cb(json.error);
         if (json.items.length === 0) return cb(new Error('Not found'));
         cb(null, json.items[0].snippet.title);
-    }
+    };
     xhr.onerror = function () {
         cb(new Error('Error contacting the YouTube API'));
-    }
+    };
     xhr.onabort = function () {
         cb(new Error('Aborted'));
-    }
+    };
 
     xhr.send();
 }
