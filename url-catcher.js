@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kongregate URL Catcher
 // @namespace    http://tampermonkey.net/
-// @version      0.5.0
+// @version      0.5.1
 // @description  Simple tool that continuously checks your Kongregate chat and lists links posted there.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -32,6 +32,9 @@ class Settings {
     initEvents() {
         $(document).on('click', '#btn-save-settings', function() {
             this.save();
+            $('#settings-saved-label').fadeIn(150, function(){
+                $(this).delay(800).fadeOut();
+            });
         }.bind(this));
     }
 
@@ -45,7 +48,7 @@ class Settings {
             + '<tr><td colspan="2" style="width: 100%; text-align: center;">'
             + '<input type="text" name="setting-youtube-apikey" id="setting-youtube-apikey" placeholder="Your YT API key" spellcheck="false" size="40" value="' + (this.youtubeApiKey ? this.youtubeApiKey : '') + '"></input></td></tr>'
 
-            + '<tr><td><label for="setting-clickable">Links clickable in chat</label></td>'
+            + '<tr><td style="width: 100%;" class="trunc"><label for="setting-clickable">Links clickable in chat</label></td>'
             + '<td style="width: 80px; text-align: center;"><input type="checkbox" name="setting-clickable" id="setting-clickable" ' + (this.clickable ? 'checked' : '') + '></td></tr>'
 
             //+ '<tr><td><label for="setting-friends">Ignore links not posted by friends</label></td>'
@@ -68,7 +71,8 @@ class Settings {
             //+ '</select</td></tr>'
 
             + '</table>'
-            + '<table style="width: 100%;"><tr><td style="text-align: right;"><button class="button" id="btn-save-settings">Save</button></td></tr></table>'
+            + '<table style="width: 100%;"><tr><td style="width: 100%; text-align: right; padding-right: 10px;"><span id="settings-saved-label" style="display: none;">Saved!</span>'
+            + '</td><td style="width: 140px; text-align: right;"><button class="button" id="btn-save-settings">Save</button></td></tr></table>'
         ;
 
         return html;
@@ -335,6 +339,7 @@ function initStyles() {
     styles.push('#url-catcher .url-catcher-settings td {padding-left: 3px;}');
     styles.push('#url-catcher .url-catcher-settings #setting-youtube-apikey {font-size: 0.55rem; height: 7px; margin: 3px 0 2px 0; text-align: center;}');
     styles.push('#url-catcher .button {padding: 4px; min-width: 80px; font-weight: bold;}');
+    styles.push('#url-catcher #settings-saved-label {color: green;}');
 
     addGlobalStyles(styles.join("\n"));
 
