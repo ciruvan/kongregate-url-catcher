@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kongregate URL Catcher
 // @namespace    http://tampermonkey.net/
-// @version      0.5.2
+// @version      0.5.3
 // @description  Simple tool that continuously checks your Kongregate chat and lists links posted there.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -131,7 +131,7 @@ class Link {
     }
 
     youtubeID() {
-        let regEx = /^http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?[\w\?=]*)?$/g;
+        let regEx = /^http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?[\w\?=]*)?/g;
         let arr = regEx.exec(this.link);
 
         if (arr) {
@@ -178,15 +178,16 @@ class LinkList {
             let user = $(elem).find('.username span').html();
             let message = $(elem).find('.message').html();
 
-            const matches = message.matchAll(re_weburl);
+            const matches = message.replace('&nbsp;', '').matchAll(re_weburl);
             for (const match of matches) {
                 // remove non-breaking space
-                let url = match[0].replace('&nbsp;', '');
+                let url = match[0].replace('&nbsp;', '').replace('</a>', '').replace('"', '');
                 let link = new Link(time, user, url, room, whisper);
 
+                console.log('URL: ' + url);
                 if (!this.contains(link.getHash())) {
-                    if (settings.clickable) {
-//                        $(elem).find('.message').html(message.replace(url, '<a href="' + url + '" target="_blank">' + url + ' </a>'));
+                    if (settings.clickable && !message.includes('</a>')) {
+                        $(elem).find('.message').html(message.replace('&nbsp;', '').replace(url, '<a href="' + url + '" target="_blank">' + url + '</a>'));
                     }
 
                     this.addLink(link);
@@ -310,7 +311,7 @@ function initStyles() {
 
     styles.push('#url-catcher {min-width: 155px; min-height: 200px; width: 300px; height: ' + height
         + 'px; padding: 0.5em; position: absolute; top: ' + top + 'px; left: ' + left + 'px; border: 1px solid; '
-        + 'background-color: #ddd;' + roundedCorners + '; font-size: 0.55rem !important; z-index: 99999;}'
+        + 'background-color: #ddd;' + roundedCorners + '; font-size: 0.56rem !important; z-index: 99999;}'
     );
     styles.push('#url-catcher .url-catcher-header {cursor: grab; padding: 3px; font-size: 0.6rem !important; ' + roundedCorners + '}');
     styles.push('#url-catcher #tabs {position: absolute; top: 31px; left: 3px; right: 3px; bottom: 3px;}');
@@ -329,9 +330,9 @@ function initStyles() {
     styles.push('#url-catcher .url-catcher-settings tr:nth-child(2n+2) {background: #eee;}');
     styles.push('#url-catcher .url-catcher-settings input[type="checkbox"] {margin-top: 5px;}');
     styles.push('#url-catcher .url-catcher-settings select {margin: 3px 0 3px 0;}');
-    styles.push('#url-catcher .url-catcher-settings option {font-size: 0.55rem;}');
+    styles.push('#url-catcher .url-catcher-settings option {font-size: 0.56rem;}');
     styles.push('#url-catcher .url-catcher-settings td {padding-left: 3px;}');
-    styles.push('#url-catcher .url-catcher-settings #setting-youtube-apikey {font-size: 0.55rem; height: 7px; margin: 3px 0 2px 0; text-align: center;}');
+    styles.push('#url-catcher .url-catcher-settings #setting-youtube-apikey {font-size: 0.56rem; height: 7px; margin: 3px 0 2px 0; text-align: center;}');
     styles.push('#url-catcher .button {padding: 4px; min-width: 80px; font-weight: bold;}');
     styles.push('#url-catcher #settings-saved-label {color: green;}');
 
