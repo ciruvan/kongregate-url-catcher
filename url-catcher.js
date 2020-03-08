@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kongregate URL Catcher
 // @namespace    http://tampermonkey.net/
-// @version      0.5.1
+// @version      0.5.2
 // @description  Simple tool that continuously checks your Kongregate chat and lists links posted there.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -63,12 +63,6 @@ class Settings {
 
             //+ '<tr><td><label for="setting-size">Restore window size on load</label></td>'
             //+ '<td style="text-align: center;"><input type="checkbox" name="setting-size" id="setting-size" ' + (this.size.restore ? 'checked' : '') + '></td></tr>'
-
-            //+ '<tr><td><label for="setting-links">Open links in..</label></td>'
-            //+ '<td style="text-align: center;"><select name="setting-links" id="setting-links">'
-            //+ '<option value="tab">New tab</option>'
-            //+ '<option value="window">New window</option>'
-            //+ '</select</td></tr>'
 
             + '</table>'
             + '<table style="width: 100%;"><tr><td style="width: 100%; text-align: right; padding-right: 10px;"><span id="settings-saved-label" style="display: none;">Saved!</span>'
@@ -190,11 +184,11 @@ class LinkList {
                 let url = match[0].replace('&nbsp;', '');
                 let link = new Link(time, user, url, room, whisper);
 
-                if (settings.clickable) {
-                    $(elem).find('.message').html(message.replace(url, '<a href="' + url + '" target="_blank">' + url + '</a>'));
-                }
-
                 if (!this.contains(link.getHash())) {
+                    if (settings.clickable) {
+//                        $(elem).find('.message').html(message.replace(url, '<a href="' + url + '" target="_blank">' + url + ' </a>'));
+                    }
+
                     this.addLink(link);
                 }
             }
