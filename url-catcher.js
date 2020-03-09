@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kongregate URL Catcher
 // @namespace    http://tampermonkey.net/
-// @version      0.5.4
+// @version      0.5.5
 // @description  Simple tool that continuously checks your Kongregate chat and lists links posted there.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -162,36 +162,38 @@ class LinkList {
 
     updateList() {
         $('.chat_message_window .chat-message').each(function(index, elem) {
-            let room = $('#chat_window_header .room_name').html();
-            let whisper = false;
+            if ($(elem).closest('.chat_room_template').is(':visible')) {
+                let room = $('#chat_window_header .room_name').html();
+                let whisper = false;
 
-            if ($(elem).find('p').hasClass('whisper')) {
-                room = 'whisper';
-                whisper = true;
-            };
+                if ($(elem).find('p').hasClass('whisper')) {
+                    room = 'whisper';
+                    whisper = true;
+                };
 
-            let timestamp = $(elem).find('.timestamp').html();
-            let regEx = /\s-\s(.*[P|A]M)$/g;
-            let arr = regEx.exec(timestamp);
-            let time = arr[1];
+                let timestamp = $(elem).find('.timestamp').html();
+                let regEx = /\s-\s(.*[P|A]M)$/g;
+                let arr = regEx.exec(timestamp);
+                let time = arr[1];
 
-            let user = $(elem).find('.username span').html();
-            let message = $(elem).find('.message').html();
-            $(elem).find('.message').html(message.replace('&nbsp;', ''));
+                let user = $(elem).find('.username span').html();
+                let message = $(elem).find('.message').html();
+                $(elem).find('.message').html(message.replace('&nbsp;', ''));
 
-            const matches = message.replace('&nbsp;', '').matchAll(re_weburl);
-            for (const match of matches) {
-                // remove non-breaking space
-                let url = match[0].replace('&nbsp;', '').replace('</a>', '').replace('"', '');
-                let link = new Link(time, user, url, room, whisper);
+                const matches = message.replace('&nbsp;', '').matchAll(re_weburl);
+                for (const match of matches) {
+                    // remove non-breaking space
+                    let url = match[0].replace('&nbsp;', '').replace('</a>', '').replace('"', '');
+                    let link = new Link(time, user, url, room, whisper);
 
-                console.log('URL: ' + url);
-                if (!this.contains(link.getHash())) {
-                    if (settings.clickable && !message.includes('class="url-catcher-chatlink"')) {
-                        $(elem).find('.message').html(message.replace('&nbsp;', '').replace(url, '<a class="url-catcher-chatlink" href="' + url + '" target="_blank">' + url + '</a>'));
+                    console.log('URL: ' + url);
+                    if (!this.contains(link.getHash())) {
+                        if (settings.clickable && !message.includes('class="url-catcher-chatlink"')) {
+                            $(elem).find('.message').html(message.replace('&nbsp;', '').replace(url, '<a class="url-catcher-chatlink" href="' + url + '" target="_blank">' + url + '</a>'));
+                        }
+
+                        this.addLink(link);
                     }
-
-                    this.addLink(link);
                 }
             }
         }.bind(this));
