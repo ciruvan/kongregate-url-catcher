@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kongregate URL Catcher
 // @namespace    http://tampermonkey.net/
-// @version      0.5.5
+// @version      0.5.6
 // @description  Simple tool that continuously checks your Kongregate chat and lists links posted there.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -51,6 +51,9 @@ class Settings {
             + '<tr><td style="width: 100%;" class="trunc"><label for="setting-clickable">Links clickable in chat</label></td>'
             + '<td style="width: 80px; text-align: center;"><input type="checkbox" name="setting-clickable" id="setting-clickable" ' + (this.clickable ? 'checked' : '') + '></td></tr>'
 
+            + '<tr><td style="width: 100%;" class="trunc"><label for="setting-moveleft">Move game window to the left</label></td>'
+            + '<td style="width: 80px; text-align: center;"><input type="checkbox" name="setting-moveleft" id="setting-moveleft" ' + (this.moveLeft ? 'checked' : '') + '></td></tr>'
+
             //+ '<tr><td><label for="setting-friends">Ignore links not posted by friends</label></td>'
             //+ '<td style="text-align: center;"><input type="checkbox" name="setting-friends" id="setting-friends" ' + (this.friends ? 'checked' : '') + '></td></tr>'
 
@@ -83,6 +86,8 @@ class Settings {
         GM_setValue('sizeY', this.size.y);
         GM_setValue('youtube', $('#setting-youtube').is(":checked"));
         GM_setValue('youtubeApiKey', $('#setting-youtube-apikey').val());
+        GM_setValue('moveLeft', $('#setting-moveleft').is(":checked"));
+
         this.load();
     }
 
@@ -97,6 +102,19 @@ class Settings {
         this.size.y = GM_getValue('sizeY', 0);
         this.youtube = GM_getValue('youtube', false);
         this.youtubeApiKey = GM_getValue('youtubeApiKey', false);
+        this.moveLeft = GM_getValue('moveLeft', false);
+
+        this.applyChanges();
+    }
+
+    applyChanges() {
+        if (this.moveLeft) {
+            $('#maingame').addClass('maingame-moveleft');
+            $('#maingamecontent').addClass('maingamecontent-moveleft');
+        } else {
+            $('#maingame').removeClass('maingame-moveleft');
+            $('#maingamecontent').removeClass('maingamecontent-moveleft');
+        }
     }
 }
 
@@ -327,7 +345,7 @@ function initStyles() {
     styles.push('#url-catcher .trunc {white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;}');
     styles.push('#url-catcher .link-table tr.is-odd {background: #fff;}');
     styles.push('#url-catcher .link-table tr.is-even {background: #eee;}');
-    styles.push('#url-catcher .url-catcher-tab {overflow-y: auto; position: absolute; top: 30px; bottom: 0px;}');
+    styles.push('#url-catcher .url-catcher-tab {overflow-y: auto; overflow-x: hidden; position: absolute; top: 30px; bottom: 0px;}');
     styles.push('#url-catcher .url-catcher-settings {width: 100%; table-layout: fixed; border-collapse: collapse; border-bottom: 1px solid #aaa; margin-bottom: 6px; padding: 0 3px 3px 3px;}');
     styles.push('#url-catcher .url-catcher-settings tr:nth-child(2n+1) {background: #fff;}');
     styles.push('#url-catcher .url-catcher-settings tr:nth-child(2n+2) {background: #eee;}');
@@ -338,6 +356,8 @@ function initStyles() {
     styles.push('#url-catcher .url-catcher-settings #setting-youtube-apikey {font-size: 0.55rem; height: 7px; margin: 3px 0 2px 0; text-align: center;}');
     styles.push('#url-catcher .button {padding: 4px; min-width: 80px; font-weight: bold;}');
     styles.push('#url-catcher #settings-saved-label {color: green;}');
+    styles.push('.maingame-moveleft {margin: 0 !important;}');
+    styles.push('.maingamecontent-moveleft {left: 10px; position: absolute !important;}');
 
     addGlobalStyles(styles.join("\n"));
 
