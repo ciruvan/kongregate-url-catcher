@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Konglomerate
 // @namespace    http://tampermonkey.net/
-// @version      0.6.0
+// @version      0.6.1
 // @description  Helper tool for Kongregate that logs URLs posted in chatrooms and that adds various other features to make your Kongregate life more fun.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -239,7 +239,6 @@ class LinkList {
                     let url = match[0].replace('&nbsp;', '').replace('</a>', '').replace('"', '');
                     let link = new Link(time, user, url, room, whisper);
 
-                    console.log('URL: ' + url);
                     if (!this.contains(link.getHash())) {
                         if (settings.clickable && !message.includes('class="url-catcher-chatlink"')) {
                             $(elem).find('.message').html(message.replace('&nbsp;', '').replace(url, '<a class="url-catcher-chatlink" href="' + url + '" target="_blank">' + url + '</a>'));
@@ -315,7 +314,7 @@ class URLCatcherApp {
 
         let observable = document.getElementById('chat_rooms_container');
 
-        observable.addEventListener('DOMSubtreeModified', function(ev) {
+        observable.addEventListener('DOMSubtreeModified', async function(ev) {
             if (ev.target.classList.contains('chat_message_window')) {
                 this.linkList.updateList();
             }
