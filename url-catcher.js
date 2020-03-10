@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DefKong Five
 // @namespace    http://tampermonkey.net/
-// @version      0.6.2
+// @version      0.6.3
 // @description  Helper tool for Kongregate that logs URLs posted in chatrooms and that adds various other features to make your Kongregate life more fun.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -126,9 +126,11 @@ class Settings {
         this.size.x = GM_getValue('sizeX', 0);
         this.size.y = GM_getValue('sizeY', 0);
 
-        $('#' + divId).offset(this.position);
-        $('#' + divId).height(this.size.y);
-        $('#' + divId).width(this.size.x);
+        if (this.size.x > 0 && this.size.y > 0 && this.position.left > 0 && this.position.top > 0) {
+            $('#' + divId).offset(this.position);
+            $('#' + divId).height(this.size.y);
+            $('#' + divId).width(this.size.x);
+        }
     }
 
     applyChanges() {
