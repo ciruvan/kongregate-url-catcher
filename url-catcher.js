@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Konglomerate
+// @name         DefKong Five
 // @namespace    http://tampermonkey.net/
-// @version      0.6.1
+// @version      0.6.2
 // @description  Helper tool for Kongregate that logs URLs posted in chatrooms and that adds various other features to make your Kongregate life more fun.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -85,15 +85,6 @@ class Settings {
             + '<tr><td style="width: 100%;" class="trunc"><label">Adjust user list height</label></td>'
             + '<td style="width: 120px; text-align: center; padding: 6px 8px 5px 8px;"><div id="userlist-slider"></div</td></tr>'
 
-            //+ '<tr><td><label for="setting-friends">Ignore links not posted by friends</label></td>'
-            //+ '<td style="text-align: center;"><input type="checkbox" name="setting-friends" id="setting-friends" ' + (this.friends ? 'checked' : '') + '></td></tr>'
-
-            //+ '<tr><td><label for="setting-position">Window position / size on load</label></td>'
-            //+ '<td style="text-align: center;"><select name="setting-position" id="setting-position">'
-            //+ '<option value="restore">Restore last</option>'
-            //+ '<option value="right">Right of game</option>'
-            //+ '</select</td></tr>'
-
             + '</table>'
             + '<table style="width: 100%;"><tr><td style="width: 100%; text-align: right; padding-right: 10px;"><span id="settings-saved-label" style="display: none;">Saved!</span>'
             + '</td><td style="width: 140px; text-align: right;"><button class="button" id="btn-save-settings">Save</button></td></tr></table>'
@@ -109,14 +100,14 @@ class Settings {
         GM_setValue('moveLeft', $('#setting-moveleft').is(":checked"));
         GM_setValue('userList', $('#userlist-slider').slider("value"));
 
-//        GM_setValue('friends', $('#setting-friends').is(":checked"));
-//        GM_setValue('position', this.position.opt);
-//        GM_setValue('positionX', this.position.x);
-//        GM_setValue('positionY', this.position.y);
-//        GM_setValue('sizeX', this.size.x);
-//        GM_setValue('sizeY', this.size.y);
-
         this.load();
+    }
+
+    savePosition() {
+        GM_setValue('positionX', this.position.left);
+        GM_setValue('positionY', this.position.top);
+        GM_setValue('sizeX', this.size.x);
+        GM_setValue('sizeY', this.size.y);
     }
 
     load() {
@@ -126,14 +117,18 @@ class Settings {
         this.moveLeft = GM_getValue('moveLeft', false);
         this.userList = GM_getValue('userList', 100);
 
-//        this.friends = GM_getValue('friends', true);
-//        this.position.opt = GM_getValue('position', 'right');
-//        this.position.x = GM_getValue('positionX', 0);
-//        this.position.y = GM_getValue('positionY', 0);
-//        this.size.x = GM_getValue('sizeX', 0);
-//        this.size.y = GM_getValue('sizeY', 0);
-
         this.applyChanges();
+    }
+
+    restorePosition() {
+        this.position.left = GM_getValue('positionX', 0);
+        this.position.top = GM_getValue('positionY', 0);
+        this.size.x = GM_getValue('sizeX', 0);
+        this.size.y = GM_getValue('sizeY', 0);
+
+        $('#' + divId).offset(this.position);
+        $('#' + divId).height(this.size.y);
+        $('#' + divId).width(this.size.x);
     }
 
     applyChanges() {
@@ -298,6 +293,7 @@ class URLCatcherApp {
                 this.initApp();
                 this.linkList = new LinkList($('#tab-urls'));
                 settings = new Settings($('#tab-settings'));
+                settings.restorePosition();
             }
         }.bind(this), 500);
     }
@@ -308,8 +304,21 @@ class URLCatcherApp {
             html: this.getInitialContent()
         }).appendTo('body');
 
-        $div.resizable();
-        $div.draggable();
+        $div.resizable({
+            stop: function(event, ui) {
+                settings.size.x = ui.size.width;
+                settings.size.y = ui.size.height;
+                settings.savePosition();
+            }
+        });
+
+        $div.draggable({
+            stop: function( event, ui ) {
+                settings.position = $div.offset();
+                settings.savePosition();
+            }
+        });
+
         $('#tabs').tabs();
 
         let observable = document.getElementById('chat_rooms_container');
@@ -464,13 +473,13 @@ let re_weburl = new RegExp(
     // (?![-_])(?:[-\\w\\u00a1-\\uffff]{0,63}[^-_]\\.)+
     "(?:" +
     "(?:" +
-    "[a-z0-9\\u00a1-\\uffff]" +
-    "[a-z0-9\\u00a1-\\uffff_-]{0,62}" +
+    "[a-zA-Z0-9\\u00a1-\\uffff]" +
+    "[a-zA-Z0-9\\u00a1-\\uffff_-]{0,62}" +
     ")?" +
-    "[a-z0-9\\u00a1-\\uffff]\\." +
+    "[a-zA-Z0-9\\u00a1-\\uffff]\\." +
     ")+" +
     // TLD identifier name, may end with dot
-    "(?:[a-z\\u00a1-\\uffff]{2,}\\.?)" +
+    "(?:[a-zA-Z\\u00a1-\\uffff]{2,}\\.?)" +
     ")" +
     // port number (optional)
     "(?::\\d{2,5})?" +
