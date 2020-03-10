@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DefKong Five
 // @namespace    http://tampermonkey.net/
-// @version      0.6.3
+// @version      0.6.4
 // @description  Helper tool for Kongregate that logs URLs posted in chatrooms and that adds various other features to make your Kongregate life more fun.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
@@ -377,7 +377,7 @@ function initStyles() {
 
     styles.push('#url-catcher {min-width: 155px; min-height: 200px; width: 300px; height: ' + height
         + 'px; padding: 0.5em; position: absolute; top: ' + top + 'px; left: ' + left + 'px; border: 1px solid; '
-        + 'background-color: #ddd;' + roundedCorners + '; font-size: 0.55rem !important; z-index: 99999;}'
+        + 'background-color: #ddd;' + roundedCorners + '; font-size: 0.57rem !important; z-index: 99999;}'
     );
     styles.push('#url-catcher .url-catcher-header {cursor: grab; padding: 3px; font-size: 0.6rem !important; ' + roundedCorners + '}');
     styles.push('#url-catcher #tabs {position: absolute; top: 31px; left: 3px; right: 3px; bottom: 3px;}');
@@ -396,9 +396,9 @@ function initStyles() {
     styles.push('#url-catcher .url-catcher-settings tr:nth-child(2n+2) {background: #eee;}');
     styles.push('#url-catcher .url-catcher-settings input[type="checkbox"] {margin-top: 5px;}');
     styles.push('#url-catcher .url-catcher-settings select {margin: 3px 0 3px 0;}');
-    styles.push('#url-catcher .url-catcher-settings option {font-size: 0.55rem;}');
+    styles.push('#url-catcher .url-catcher-settings option {font-size: 0.57rem;}');
     styles.push('#url-catcher .url-catcher-settings td {padding-left: 3px;}');
-    styles.push('#url-catcher .url-catcher-settings #setting-youtube-apikey {font-size: 0.55rem; height: 7px; margin: 3px 0 2px 0; text-align: center;}');
+    styles.push('#url-catcher .url-catcher-settings #setting-youtube-apikey {font-size: 0.56rem; height: 7px; margin: 3px 0 2px 0; text-align: center;}');
     styles.push('#url-catcher .button {padding: 4px; min-width: 80px; font-weight: bold;}');
     styles.push('#url-catcher #settings-saved-label {color: green;}');
     styles.push('.maingame-moveleft {margin: 0 !important;}');
