@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Kongregate URL Catcher
+// @name         Konglomerate
 // @namespace    http://tampermonkey.net/
-// @version      0.5.6
-// @description  Simple tool that continuously checks your Kongregate chat and lists links posted there.
+// @version      0.6.0
+// @description  Helper tool for Kongregate that logs URLs posted in chatrooms and that adds various other features to make your Kongregate life more fun.
 // @author       ciruvan
 // @include      https://www.kongregate.com/games/*
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js
@@ -24,18 +24,46 @@ class Settings {
         this.parentElem = parentElem;
         this.position = {};
         this.size = {};
-        this.initEvents();
         this.load();
         this.parentElem.html(this.getHTML());
+        this.initEvents();
     }
 
     initEvents() {
+        // Save button in settings tab
         $(document).on('click', '#btn-save-settings', function() {
             this.save();
             $('#settings-saved-label').fadeIn(150, function(){
                 $(this).delay(800).fadeOut();
             });
         }.bind(this));
+
+        this.initUserListSlider();
+    }
+
+    initUserListSlider() {
+        let userListHeight = $(".users_in_room").height();
+        let chatHeight = $(".chat_message_window").height();
+
+        // If user has switched to smaller game, let's not get out of bounds
+        if (this.userList > userListHeight + chatHeight - 100) {
+            this.userList = userListHeight + chatHeight - 100;
+        }
+
+        $(".users_in_room").height(this.userList);
+        $(".chat_message_window").height(chatHeight - this.userList + 100);
+
+        $("#userlist-slider").slider({
+            range: "max",
+            min: userListHeight,
+            max: chatHeight + userListHeight - 100,
+            value: this.userList,
+
+            slide: function( event, ui ) {
+                $(".users_in_room").height(ui.value);
+                $(".chat_message_window").height(chatHeight - ui.value + 100);
+            }
+        });
     }
 
     getHTML() {
@@ -43,29 +71,28 @@ class Settings {
             '<table class="url-catcher-settings">'
 
             + '<tr><td style="width: 100%;" class="trunc"><label for="setting-youtube">Try to fetch Youtube video titles</label></td>'
-            + '<td style="width: 80px; text-align: center;"><input type="checkbox" name="setting-youtube" id="setting-youtube" ' + (this.youtube ? 'checked' : '') + '></td></tr>'
+            + '<td style="width: 120px; text-align: center;"><input type="checkbox" name="setting-youtube" id="setting-youtube" ' + (this.youtube ? 'checked' : '') + '></td></tr>'
 
             + '<tr><td colspan="2" style="width: 100%; text-align: center;">'
             + '<input type="text" name="setting-youtube-apikey" id="setting-youtube-apikey" placeholder="Your YT API key" spellcheck="false" size="40" value="' + (this.youtubeApiKey ? this.youtubeApiKey : '') + '"></input></td></tr>'
 
-            + '<tr><td style="width: 100%;" class="trunc"><label for="setting-clickable">Links clickable in chat</label></td>'
-            + '<td style="width: 80px; text-align: center;"><input type="checkbox" name="setting-clickable" id="setting-clickable" ' + (this.clickable ? 'checked' : '') + '></td></tr>'
+            + '<tr><td style="width: 100%;" class="trunc"><label for="setting-clickable">Make links clickable in chat</label></td>'
+            + '<td style="width: 120px; text-align: center;"><input type="checkbox" name="setting-clickable" id="setting-clickable" ' + (this.clickable ? 'checked' : '') + '></td></tr>'
 
             + '<tr><td style="width: 100%;" class="trunc"><label for="setting-moveleft">Move game window to the left</label></td>'
-            + '<td style="width: 80px; text-align: center;"><input type="checkbox" name="setting-moveleft" id="setting-moveleft" ' + (this.moveLeft ? 'checked' : '') + '></td></tr>'
+            + '<td style="width: 120px; text-align: center;"><input type="checkbox" name="setting-moveleft" id="setting-moveleft" ' + (this.moveLeft ? 'checked' : '') + '></td></tr>'
+
+            + '<tr><td style="width: 100%;" class="trunc"><label">Adjust user list height</label></td>'
+            + '<td style="width: 120px; text-align: center; padding: 6px 8px 5px 8px;"><div id="userlist-slider"></div</td></tr>'
 
             //+ '<tr><td><label for="setting-friends">Ignore links not posted by friends</label></td>'
             //+ '<td style="text-align: center;"><input type="checkbox" name="setting-friends" id="setting-friends" ' + (this.friends ? 'checked' : '') + '></td></tr>'
 
-            //+ '<tr><td><label for="setting-position">Window position on load</label></td>'
+            //+ '<tr><td><label for="setting-position">Window position / size on load</label></td>'
             //+ '<td style="text-align: center;"><select name="setting-position" id="setting-position">'
             //+ '<option value="restore">Restore last</option>'
-            //+ '<option value="left">Left of game</option>'
             //+ '<option value="right">Right of game</option>'
             //+ '</select</td></tr>'
-
-            //+ '<tr><td><label for="setting-size">Restore window size on load</label></td>'
-            //+ '<td style="text-align: center;"><input type="checkbox" name="setting-size" id="setting-size" ' + (this.size.restore ? 'checked' : '') + '></td></tr>'
 
             + '</table>'
             + '<table style="width: 100%;"><tr><td style="width: 100%; text-align: right; padding-right: 10px;"><span id="settings-saved-label" style="display: none;">Saved!</span>'
@@ -77,32 +104,34 @@ class Settings {
 
     save() {
         GM_setValue('clickable', $('#setting-clickable').is(":checked"));
-        GM_setValue('friends', $('#setting-friends').is(":checked"));
-        GM_setValue('position', this.position.opt);
-        GM_setValue('positionX', this.position.x);
-        GM_setValue('positionY', this.position.y);
-        GM_setValue('sizeRestore', $('#setting-size').is(":checked"));
-        GM_setValue('sizeX', this.size.x);
-        GM_setValue('sizeY', this.size.y);
         GM_setValue('youtube', $('#setting-youtube').is(":checked"));
         GM_setValue('youtubeApiKey', $('#setting-youtube-apikey').val());
         GM_setValue('moveLeft', $('#setting-moveleft').is(":checked"));
+        GM_setValue('userList', $('#userlist-slider').slider("value"));
+
+//        GM_setValue('friends', $('#setting-friends').is(":checked"));
+//        GM_setValue('position', this.position.opt);
+//        GM_setValue('positionX', this.position.x);
+//        GM_setValue('positionY', this.position.y);
+//        GM_setValue('sizeX', this.size.x);
+//        GM_setValue('sizeY', this.size.y);
 
         this.load();
     }
 
     load() {
         this.clickable = GM_getValue('clickable', true);
-        this.friends = GM_getValue('friends', true);
-        this.position.opt = GM_getValue('position', 'right');
-        this.position.x = GM_getValue('positionX', 0);
-        this.position.y = GM_getValue('positionY', 0);
-        this.size.restore = GM_getValue('sizeRestore', false);
-        this.size.x = GM_getValue('sizeX', 0);
-        this.size.y = GM_getValue('sizeY', 0);
         this.youtube = GM_getValue('youtube', false);
         this.youtubeApiKey = GM_getValue('youtubeApiKey', false);
         this.moveLeft = GM_getValue('moveLeft', false);
+        this.userList = GM_getValue('userList', 100);
+
+//        this.friends = GM_getValue('friends', true);
+//        this.position.opt = GM_getValue('position', 'right');
+//        this.position.x = GM_getValue('positionX', 0);
+//        this.position.y = GM_getValue('positionY', 0);
+//        this.size.x = GM_getValue('sizeX', 0);
+//        this.size.y = GM_getValue('sizeY', 0);
 
         this.applyChanges();
     }
@@ -114,6 +143,12 @@ class Settings {
         } else {
             $('#maingame').removeClass('maingame-moveleft');
             $('#maingamecontent').removeClass('maingamecontent-moveleft');
+        }
+
+        if (this.userList) {
+            $('.users_in_room').addClass('userlist');
+        } else {
+            $('.users_in_room').removeClass('userlist');
         }
     }
 }
@@ -292,7 +327,7 @@ class URLCatcherApp {
             '<div><h4 class="ui-widget-header url-catcher-header">' + GM_info.script.name + ' v' + GM_info.script.version + '</h3>'
             + '<div id="tabs">'
             + '  <ul>'
-            + '    <li><a href="#tab-urls">URLs</a></li>'
+            + '    <li><a href="#tab-urls">URL Log</a></li>'
             + '    <li><a href="#tab-settings">Settings</a></li>'
             + '  </ul>'
             + '  <div id="tab-urls" class="url-catcher-tab">'
@@ -325,7 +360,7 @@ function initStyles() {
     let position = $('#maingame').offset();
     let top = position.top;
     let left = position.left + $('#maingame').outerWidth() + 20;
-    let height = $('#maingame').height();
+    let height = $('#maingamecontent').outerHeight();
 
     let styles = [];
     let roundedCorners = '-moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px; -khtml-border-radius: 4px;'
